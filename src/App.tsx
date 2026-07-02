@@ -521,6 +521,9 @@ export default function Converter() {
     <div className="min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/40 text-foreground">
       <div className="mx-auto max-w-2xl px-4 py-12 sm:py-20">
         <header className="mb-10 text-center">
+          <a href="https://toolsets.tools" className="back-button">
+            ← Back to Toolsets
+            </a>
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" />
             Type naturally — like a search bar

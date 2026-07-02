@@ -190,3 +190,14 @@
   background: #1c1c1c;
   box-shadow: 0 8px 30px rgba(0,0,0,.4);
 }
+ .back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: white;
+}
