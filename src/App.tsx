@@ -50,6 +50,7 @@ const units: Record<Category, Record<string, UnitDef>> = {
     C: { value: 1, label: "Celsius (°C)" },
     F: { value: 1, label: "Fahrenheit (°F)" },
     K: { value: 1, label: "Kelvin (K)" },
+    gasMark: { value: 1, label: "Gas Mark" },
   },
   time: {
     ms: { value: 0.001, label: "Millisecond (ms)" },
@@ -169,6 +170,15 @@ const aliases: Record<string, { category: Category; unit: string }> = {
   absolutezero: { category: "temperature", unit: "K" },
   "absolute zero": { category: "temperature", unit: "K" },
   kelvins: { category: "temperature", unit: "K" },
+  gasmark: { category: "temperature", unit: "gasMark" },
+  gasmarks: { category: "temperature", unit: "gasMark" },
+  gas: { category: "temperature", unit: "gasMark" },
+  "gas mark": { category: "temperature", unit: "gasMark" },
+  "gas marks": { category: "temperature", unit: "gasMark" },
+  "oven gas": { category: "temperature", unit: "gasMark" },
+  "gas oven": { category: "temperature", unit: "gasMark" },
+  "uk gas mark": { category: "temperature", unit: "gasMark" },
+  gm: { category: "temperature", unit: "gasMark" },
 
   second: { category: "time", unit: "s" },
   seconds: { category: "time", unit: "s" },
@@ -277,13 +287,20 @@ if (kelvin < 0) {
   return NaN;
 }
   let celsius: number;
-  if (from === "C") celsius = value;
-  else if (from === "F") celsius = (value - 32) * (5 / 9);
-  else celsius = value - 273.15;
+
+if (from === "C")
+    celsius = value;
+else if (from === "F")
+    celsius = (value - 32) * (5 / 9);
+else if (from === "gasMark")
+    celsius = gasMarkToCelsius(value);
+else
+    celsius = value - 273.15;
 
   if (to === "C") return celsius;
-  if (to === "F") return celsius * (9 / 5) + 32;
-  return celsius + 273.15;
+if (to === "F") return celsius * (9 / 5) + 32;
+if (to === "gasMark") return celsiusToGasMark(celsius);
+return celsius + 273.15;
 }
 
 function convert(value: number, from: string, to: string, category: Category): number {
@@ -421,6 +438,32 @@ const exampleQueries = [
   "2 cups to mL",
   "60 mph to km/h",
 ];
+const gasMarkTable = [
+  { gas: 0.25, c: 110, f: 225 },
+  { gas: 0.5, c: 120, f: 250 },
+  { gas: 1, c: 140, f: 275 },
+  { gas: 2, c: 150, f: 300 },
+  { gas: 3, c: 170, f: 325 },
+  { gas: 4, c: 180, f: 350 },
+  { gas: 5, c: 190, f: 375 },
+  { gas: 6, c: 200, f: 400 },
+  { gas: 7, c: 220, f: 425 },
+  { gas: 8, c: 230, f: 450 },
+  { gas: 9, c: 240, f: 475 },
+];
+
+function gasMarkToCelsius(gas: number) {
+  const match = gasMarkTable.find((x) => x.gas === gas);
+  return match ? match.c : 140 + (gas - 1) * 14;
+}
+
+function celsiusToGasMark(celsius: number) {
+  const closest = gasMarkTable.reduce((prev, curr) =>
+    Math.abs(curr.c - celsius) < Math.abs(prev.c - celsius) ? curr : prev
+  );
+
+  return closest.gas;
+}
 
 export default function Converter() {
   const [category, setCategory] = useState<Category>("length");
@@ -450,6 +493,27 @@ export default function Converter() {
       setParseError("");
       return;
     }
+   const gasMarkFirstMatch = input.match(
+  /(?:gas\s*mark|oven\s*gas|gas\s*oven|uk\s*gas\s*mark)\s*(\d+(?:\.\d+)?)\s*(?:to|in)\s*(c|f|k|celsius|fahrenheit|kelvin)/i
+);
+
+if (gasMarkFirstMatch) {
+  const value = Number(gasMarkFirstMatch[1]);
+  const target = gasMarkFirstMatch[2].toLowerCase();
+
+  const targetUnit =
+    target === "c" || target === "celsius"
+      ? "C"
+      : target === "f" || target === "fahrenheit"
+      ? "F"
+      : "K";
+
+  setCategory("temperature");
+  setFrom("gasMark");
+  setTo(targetUnit);
+  setValue(String(value));
+  return;
+}
     const parsed = parseInput(input);
     if (!parsed) {
       setParseError("");
@@ -491,6 +555,7 @@ export default function Converter() {
         setValue(String(parsed.value));
       }
     }
+    
   }, [input]);
 
   // When category changes from dropdown, reset units
